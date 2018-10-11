@@ -1,32 +1,53 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
+	"net/http"
 )
 
-type Page struct {
-	Title string
-	Body []byte
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("status: available"))
 }
 
-func (p *Page) save() error {
-	filename := p.Title + ".txt"
-	return ioutil.WriteFile(filename, p.Body, 0600)
+type Event struct {
+	Type string
+	Body string
 }
 
-func loadPage(title string) (*Page, error) {
-	filename := title + ".txt"
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
+func (e *Event) String() string {
+	return fmt.Sprintf("Event read successfully. { Type: %v, Body: %s }",
+		e.Type, e.Body)
+}
+
+func eventHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		// parse the form
+		if err := r.ParseForm(); err != nil {
+			fmt.Fprintf(w, "ParseForm() error: %v", err)
+			return
+		}
+
+		// decode the body into an Event since it's a POST
+		decoder := json.NewDecoder(r.Body)
+		var event Event
+		err := decoder.Decode(&event)
+		if err != nil {
+			panic(err)
+		}
+
+		// log the body as a response
+		w.Write([]byte(event.String()))
+
+	default:
+		fmt.Fprintf(w, "Sorry, only POST is supported.")
 	}
-	return &Page{Title: title, Body: body}, nil
 }
 
 func main() {
-	p1 := &Page{Title: "TestPage", Body: []byte("This is a sample Page.")}
-	p1.save()
-	p2, _ := loadPage("TestPage")
-	fmt.Println(string(p2.Body))
+	http.HandleFunc("/status", statusHandler)
+	http.HandleFunc("/event", eventHandler)
+	log.Fatal(http.ListenAndServe(":3001", nil))
 }
