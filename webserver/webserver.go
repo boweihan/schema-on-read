@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/schema-on-read/pubsub"
 	"log"
 	"net/http"
 )
@@ -41,6 +42,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// log the body as a response
 		w.Write([]byte(event.String()))
 
+		pubsub.CreateTopic("test")
 	default:
 		fmt.Fprintf(w, "Sorry, only POST is supported.")
 	}
