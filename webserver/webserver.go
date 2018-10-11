@@ -42,7 +42,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		// log the body as a response
 		w.Write([]byte(event.String()))
 
-		pubsub.CreateTopic("test")
+		// pubsub.CreateTopic("test")
+		pubsub.CreateMessage("message", "projects/schema-on-read/topics/test")
 	default:
 		fmt.Fprintf(w, "Sorry, only POST is supported.")
 	}
